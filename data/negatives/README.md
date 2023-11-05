@@ -1,6 +1,6 @@
 ## Description of these programs and files
 
-**descriptor_creation2.py** - this is used to generate the bg.txt file that is required for the cascade training. Note that in order for this bg.txt file to work if it used on Linux but created on Windows, then the following command must be used to convert it to solely ASCII characters (an error arises due to line spacing otherwise). Running 'dos2unix bg.txt' will solve this problem, but you will first need to install the dos2unix library.
+**get_descriptor.py** - this is used to generate the bg.txt file that is required for the cascade training.
 
 **neg_northern.zip** - contains the neg images of the northern celestial hemisphere and bg.txt file generated using neg_process4.py from images captured in Stellarium using one of the Stellarium scripts provided in this repository. These negative images are largely unaltered.
 

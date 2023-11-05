@@ -1,5 +1,7 @@
 # CV-Star-Sensor
 
+# Forked from https://github.com/raspberrystars/CV-Star-Sensor
+
 # Welcome to you if you're coming from Instructables!
 
 ## MSc Project repo for computer vision star identification and satellite orientation project (CURRENTLY ACTIVE)
