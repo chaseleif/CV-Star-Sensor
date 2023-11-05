@@ -22,6 +22,8 @@ SolarSystem.setFlagLabels(false);
 SpecialMarkersMgr.setFlagCompassMarks(false);
 SpecialMarkersMgr.setFlagFOVRectangularMarker(false);
 SpecialMarkersMgr.setFlagFOVCircularMarker(false);
+LandscapeMgr.setFlagCardinalPoints(false);
+Satellites.setFlagHintsVisible(false);
 // LandscapeMgr.setFlagCardinalsPoints(false);
 // Satellites.setFlagHints(false);
 // Satellites.setFlagLabels(false);
