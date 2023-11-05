@@ -17,9 +17,12 @@ core.setTimeRate(0);
 LandscapeMgr.setFlagLandscape(false);
 LandscapeMgr.setFlagAtmosphere(false);
 LandscapeMgr.setFlagFog(false);
-// **************
-// LandscapeMgr.setFlagCardinalsPoints(false);
 SolarSystem.setFlagLabels(false);
+// **************
+SpecialMarkersMgr.setFlagCompassMarks(false);
+SpecialMarkersMgr.setFlagFOVRectangularMarker(false);
+SpecialMarkersMgr.setFlagFOVCircularMarker(false);
+// LandscapeMgr.setFlagCardinalsPoints(false);
 // Satellites.setFlagHints(false);
 // Satellites.setFlagLabels(false);
 // **************
