@@ -32,7 +32,6 @@ def markimg(imgname, savename=None, smallname=None):
 
   #Resizes back to original resolution, and finds the dimensions.
   mask2resized = cv2.resize(mask2, (width, height))
-  h2, w2 = mask2resized.shape[:2]
 
   #Identifies 'contours' within the processed image.
   cnts = cv2.findContours(mask2resized.copy(),
@@ -64,7 +63,7 @@ def markimg(imgname, savename=None, smallname=None):
 
     rectangle_temp = rectangle.copy()
 
-    if y1 > 0 and y2 < h2 and x1 > 0 and x2 < w2:
+    if y1 > 0 and y2 < height and x1 > 0 and x2 < width:
       for c in range(0, 3):
         rectangle_temp[y1:y2, x1:x2, c] = \
                     alpha_s * fg_img[:, :, c] + \
