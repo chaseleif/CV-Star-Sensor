@@ -30,6 +30,9 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
     outputRejectLevels = True
     )
 
+  print(f'Cascade number {cascade}, ({ra},{dec}), ', end='')
+  #Track new boxes
+  box = []
   #The purpose of this if statement is to see if any detection has been made.
   if len(stars) > 0:
     #highweight = 0
@@ -48,37 +51,36 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
 
     #Sets the levelWeights value bounds for a 'successful' detection.
     if weighted > 4 and weighted < 6:
-      #Bounding box: x0,y0 to x1,y1
-      #Center pixels: x and y = cenpixx, cenpixy
-      cenpixx = (x0+x1)//2
-      cenpixy = (y0+y1)//2
-      font = cv2.FONT_HERSHEY_SIMPLEX
-      cv2.putText(img,
-                  f'{cascade}, {round(weighted,2)}: {cenpixx}, {cenpixy}',
-                  (x0,y0-16),
-                  font,0.9,(0,0,255),
-                  2,
-                  cv2.LINE_AA)
-      cv2.rectangle(img, (x0,y0), (x1,y1), (0,255,0), 2)
-      print(f'Cascade number {cascade} DETECTS: ', end='')
-      # position and RA/Dec coordinate
-      print(f'({cenpixx},{cenpixy}), ({ra},{dec})')
-      print(weighted, end='\n\n')
+      label = f'{cascade}, {round(weighted,2)}: {(x0+x1)//2}, {(y0+y1)//2}'
+      box = [(label,x0,y0,x1,y1)]
+      print('DETECTS\n')
     else:
-      print(f'Cascade number {cascade} POOR DETECTION')
-      print(weighted, end='\n\n')
+      print('POOR DETECTION {round(weighted,2)}\n')
   else:
-    print(f'Cascade number {cascade} NO DETECTION', end='\n\n')
+    print('NO DETECTION\n')
+  return box
 
 def runtest(imgname):
   img = cv2.imread(imgname) if type(imgname) is str else imgname
+  boxes = []
   #Run the detection function for each cascade file
   for directory in cascades:
     for xmlname in os.listdir(directory):
       parts = xmlname[:-4].split(',')
       if len(parts) != 5:
         continue
-      stardetection(*parts, os.path.sep.join([directory,xmlname]), img)
+      boxes += stardetection(*parts,
+                              os.path.sep.join([directory,xmlname]),
+                              img)
+  for box in boxes:
+    #box = (label,x0,y0,x1,y1)
+    cv2.putText(img,
+                box[0],
+                (box[1],box[2]-16),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.9, (0,0,255), 2,
+                cv2.LINE_AA)
+    cv2.rectangle(img, (box[1],box[2]), (box[3],box[4]), (0,255,0), 2)
   shrunk_img = cv2.resize(img, (1344, 756))
   cv2.imshow("Star Pattern Detections", shrunk_img)
   cv2.waitKey(0)
