@@ -26,26 +26,21 @@ def markimg(imgname, savename=None, smallname=None, doerosion=True):
   if (height, width) != rectangle.shape[:2]:
     rectangle = cv2.resize(rectangle, (width, height))
 
-  #Optionally erode image before identifying contours
+  #Enlarge bg_img to prevent erosion stage from removing too many stars.
+  contours = cv2.resize(bg_img, (width*2, height*2))
+  #Greyscale the enlarged background star image.
+  contours = cv2.cvtColor(contours, cv2.COLOR_BGR2GRAY)
+  #Threshold, erode, and dilate the stars on this image.
+  contours = cv2.threshold(contours, 175, 255, cv2.THRESH_BINARY)[1]
+  #Conditionally erode image
   if doerosion:
-    #Enlarge bg_img to prevent erosion stage from removing too many stars.
-    eroded_bg = cv2.resize(bg_img, (width*2, height*2))
-    #Greyscale the enlarged background star image.
-    eroded_bg = cv2.cvtColor(eroded_bg, cv2.COLOR_BGR2GRAY)
-    #Threshold, erode, and dilate the stars on this image.
-    eroded_bg = cv2.threshold(eroded_bg, 175, 255, cv2.THRESH_BINARY)[1]
-    eroded_bg = cv2.erode(eroded_bg, None, iterations=1)
-    eroded_bg = cv2.dilate(eroded_bg, None, iterations = 2)
-    #Resize back to original resolution.
-    eroded_bg = cv2.resize(eroded_bg, (width, height))
-    contours = cv2.findContours(eroded_bg,
-                                cv2.RETR_EXTERNAL,
-                                cv2.CHAIN_APPROX_SIMPLE)
-  else:
-    #Identify 'contours' within the processed image.
-    contours = cv2.findContours(bg_img,
-                                cv2.RETR_EXTERNAL,
-                                cv2.CHAIN_APPROX_SIMPLE)
+    contours = cv2.erode(contours, None, iterations=1)
+  contours = cv2.dilate(contours, None, iterations = 2)
+  #Resize back to original resolution.
+  contours = cv2.resize(contours, (width, height))
+  contours = cv2.findContours(contours,
+                              cv2.RETR_EXTERNAL,
+                              cv2.CHAIN_APPROX_SIMPLE)
   contours = imutils.grab_contours(contours)
 
   rectangle_build = rectangle.copy()

@@ -34,8 +34,7 @@ if __name__ == '__main__':
     sys.exit(0)
   negatives = args['negatives'].split(',')
   get_negs(negatives)
-  if 'positive' in args:
-    markimg(args['positive']) #,'testbig.png','testsm.png')
+  doerosion = False if args['noerode'] else True
   if 'test' in args:
-    runtest(markimg(args['test']))
+    runtest(markimg(args['test'], doerosion=doerosion))
 
