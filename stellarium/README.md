@@ -4,6 +4,7 @@
 - Set the output directory within each .ssc script. 
 - Windows: place scripts in the scripts folder of your Stellarium install folder (most likely under Program Files). They can be run either from within Stellarium by opening the scripts window, or by simply running the scripts from the scripts folder, which will open up Stellarium and run them. 
 - In Linux, put the .ssc scripts in ~/.stellarium/scripts/ and choose the script after launching Stellarium. 
+- Set the video resolution to size output images: ~/.stellarium/config.ini: fullscreen=true, screen_h=1080, screen_w=1920 
 
 **NOTE:** 
 Using Stellarium 23.3, I had to comment out function calls within the scripts to work: 
