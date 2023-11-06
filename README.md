@@ -8,13 +8,13 @@ To use *driver.py* in the top-level directory:
 - The directory name should be cv_star_sensor, as the repo, to locate scripts
 
 ./driver.py
-- Specify 1 or more negative sets to use (default neg_southern2)
+- Specify 1 or more negative sets to use (default neg_southern2)  
 `python3 driver.py --negatives neg_southern2,neg_sports`  
 The negatives would be used in training
-- Disable erosion of image (removal of some less bright stars) in processing
+- Disable erosion of image (removal of some less bright stars) in processing  
 `python3 driver.py --noerode`  
 This is mentioned to have been done in a later step
-- Specify test (input) image
+- Specify test (input) image  
 `python3 driver.py --test=stellarium/images/check001.png`  
 This will add fiducial markers to the image  
 then run all cascades on the image, reporting statistics  
