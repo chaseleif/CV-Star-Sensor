@@ -16,6 +16,10 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
   stars_cascade = cv2.CascadeClassifier(xmlname)
 
   #Applies the detectMultiScale3 function with the appropriate parameters.
+  # ***
+  #  levelWeights are rejectLevels' weights . . .
+  #  I'm not sure this is what is intended
+  # ***
   stars, rejectLevels, levelWeights = stars_cascade.detectMultiScale3(
     img,
     scaleFactor = 1.05,
@@ -28,12 +32,15 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
 
   #The purpose of this if statement is to see if any detection has been made.
   if len(stars) > 0:
-    highweight = 0
+    #highweight = 0
+    maxsize = 0
     for i, (x,y,w,h) in enumerate(stars):
       #This if statement will find the detection with the largest bounding box.
-      if levelWeights[i] > highweight:
-        highweight = levelWeights[i]
-        weighted = highweight*sf
+      #if levelWeights[i] > highweight:
+      #  highweight = levelWeights[i]
+      if w*h > maxsize:
+        maxsize = w*h
+        weighted = levelWeights[i]*sf
         x0 = x
         y0 = y
         x1 = x+w
