@@ -71,6 +71,8 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
                   cv2.LINE_AA)
       shrunk_img = cv2.resize(img, (1344, 756))
       cv2.imshow("Star Pattern Detections", shrunk_img)
+      cv2.waitKey(0)
+      cv2.destroyAllWindows()
       print(f'Cascade number {cascade} DETECTS:', end='')
       # position and RA/Dec coordinate
       print(f'({cenpixx},{cenpixy}), ({ra},{dec})')
