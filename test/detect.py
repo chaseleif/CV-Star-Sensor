@@ -11,6 +11,7 @@ cascades = [os.path.sep.join(thisdir+[cascade]) for cascade in cascades]
 
 #Detection function.
 def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
+  sf = float(sf)
   #Specifies the cascade file to be loaded.
   stars_cascade = cv2.CascadeClassifier(xmlname)
 
@@ -25,49 +26,33 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
     outputRejectLevels = True
     )
 
-  #Create some additional variables = 0 for use in later 'for loops'.
-  i = 0
-  highweight = 0
-  big_w = 0
-  weighted = 0
-
   #The purpose of this if statement is to see if any detection has been made.
   if len(stars) > 0:
-    for (x,y,w,h) in stars:
-
+    highweight = 0
+    for i, (x,y,w,h) in enumerate(stars):
       #This if statement will find the detection with the largest bounding box.
-      if w > big_w:
+      if levelWeights[i] > highweight:
         highweight = levelWeights[i]
-        weighted = float(highweight)*float(sf)
-        x1 = x
-        y1 = y
-        w1 = w
-        h1 = h
+        weighted = highweight*sf
+        x0 = x
+        y0 = y
+        x1 = x+w
+        y1 = y+h
 
     #Sets the levelWeights value bounds for a 'successful' detection.
     if weighted > 4 and weighted < 6:
+      #Bounding box: x0,y0 to x1,y1
+      #Center pixels: x and y = cenpixx, cenpixy
+      cenpixx = (x0+x1)//2
+      cenpixy = (y0+y1)//2
       font = cv2.FONT_HERSHEY_SIMPLEX
       cv2.putText(img,
-                  cascade,
-                  (x1,y1-16),
+                  f'{cascade}, {round(weighted,2)}: {cenpixx}, {cenpixy}',
+                  (x0,y0-16),
                   font,0.9,(0,0,255),
                   2,
                   cv2.LINE_AA)
-      cv2.putText(img,
-                  str(weighted),
-                  (x1,y1+h1+25),
-                  font,0.7,(0,0,255),
-                  2,
-                  cv2.LINE_AA)
-      cv2.rectangle(img, (x1,y1), (x1+w1,y1+h1), (0,255,0), 2)
-      cenpixx = int(x1 + 0.5 * w1)
-      cenpixy = int(y1 + 0.5 * h1)
-      cv2.putText(img,
-                  str(cenpixx)+', '+str(cenpixy),
-                  (x1,y1-45),
-                  font,0.9,(0,0,255),
-                  2,
-                  cv2.LINE_AA)
+      cv2.rectangle(img, (x0,y0), (x1,y1), (0,255,0), 2)
       print(f'Cascade number {cascade} DETECTS: ', end='')
       # position and RA/Dec coordinate
       print(f'({cenpixx},{cenpixy}), ({ra},{dec})')
