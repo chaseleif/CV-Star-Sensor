@@ -24,10 +24,10 @@ if __name__ == '__main__':
   parser.add_argument('--negatives', metavar='negative1,negative2',
                       default='neg_southern2',
                       help='select negative groups to use')
-  parser.add_argument('--positive', metavar='img.png',
-                      help='select a single positive image to use')
+  parser.add_argument('--noerode', action='store_true', default=False,
+                      help='don\'t erode positive image in preprocessing')
   parser.add_argument('--test', metavar='img.png',
-                      help='run test on marked image')
+                      help='run test on positive image')
   args = vars(parser.parse_args())
   if 'help' in args:
     parser.print_help()
@@ -37,5 +37,5 @@ if __name__ == '__main__':
   if 'positive' in args:
     markimg(args['positive']) #,'testbig.png','testsm.png')
   if 'test' in args:
-    runtest(args['test'])
+    runtest(markimg(args['test']))
 

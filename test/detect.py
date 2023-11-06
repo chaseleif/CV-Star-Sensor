@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 import cv2, os
-import numpy as np
 
 thisdir = os.path.realpath(__file__).split(os.path.sep)[:-1]
 cascades = ['cascades']
@@ -69,11 +68,7 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
                   font,0.9,(0,0,255),
                   2,
                   cv2.LINE_AA)
-      shrunk_img = cv2.resize(img, (1344, 756))
-      cv2.imshow("Star Pattern Detections", shrunk_img)
-      cv2.waitKey(0)
-      cv2.destroyAllWindows()
-      print(f'Cascade number {cascade} DETECTS:', end='')
+      print(f'Cascade number {cascade} DETECTS: ', end='')
       # position and RA/Dec coordinate
       print(f'({cenpixx},{cenpixy}), ({ra},{dec})')
       print(weighted, end='\n\n')
@@ -81,10 +76,10 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
       print(f'Cascade number {cascade} POOR DETECTION')
       print(weighted, end='\n\n')
   else:
-    print('Cascade number '+cascade+' NO DETECTION', end='\n\n')
+    print(f'Cascade number {cascade} NO DETECTION', end='\n\n')
 
 def runtest(imgname):
-  img = cv2.imread(imgname)
+  img = cv2.imread(imgname) if type(imgname) is str else imgname
   #Run the detection function for each cascade file
   for directory in cascades:
     for xmlname in os.listdir(directory):
@@ -92,4 +87,8 @@ def runtest(imgname):
       if len(parts) != 5:
         continue
       stardetection(*parts, os.path.sep.join([directory,xmlname]), img)
+  shrunk_img = cv2.resize(img, (1344, 756))
+  cv2.imshow("Star Pattern Detections", shrunk_img)
+  cv2.waitKey(0)
+  cv2.destroyAllWindows()
 

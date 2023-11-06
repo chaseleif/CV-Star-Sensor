@@ -2,6 +2,43 @@
 
 # Forked from https://github.com/raspberrystars/CV-Star-Sensor
 
+## Repo usage 
+
+To use *driver.py* in the top-level directory:
+- The directory name should be cv_star_sensor, as the repo, to locate scripts
+
+./driver.py
+- Specify 1 or more negative sets to use (default neg_southern2)
+`python3 driver.py --negatives neg_southern2,neg_sports`  
+The negatives would be used in training
+- Disable erosion of image (removal of some less bright stars) in processing
+`python3 driver.py --noerode`  
+This is mentioned to have been done in a later step
+- Specify test (input) image
+`python3 driver.py --test=stellarium/images/check001.png`  
+This will add fiducial markers to the image  
+then run all cascades on the image, reporting statistics  
+the final image will be displayed
+
+./data/
+- The negatives folder contains archives and a script to decompress them
+- The negatives script can be ran directly or from driver.py
+- The positives folder contains a script to put fiducial markings on an image
+- The marking script optionally erodes the image (as in the source paper)
+- The marked image can be saved, a small cropped image can be saved
+- The marked image (as a cv2 image object) is returned
+
+./stellarium/
+- Folder contains the Stellarium scripts from the original repo
+- Stellarium scripts modified for stellarium version
+- Stellarium script modifications are within a comment section
+
+./test/
+- cascades folder contains saved trained model parameters for cv classifiers
+- detect.py contains a function, runtest, which takes a cv2 image or filename
+- The image should be one marked by the ./data/positives/ script
+- For each cascade, identified star regions are marked
+
 # Welcome to you if you're coming from Instructables!
 
 ## MSc Project repo for computer vision star identification and satellite orientation project (CURRENTLY ACTIVE)

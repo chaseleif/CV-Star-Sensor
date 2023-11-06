@@ -7,59 +7,59 @@ thisdir = os.path.sep.join(thisdir)
 fiducial_80x80 = os.path.sep.join([thisdir, 'fiducial_80x80.png'])
 rectangle_black = os.path.sep.join([thisdir, 'rectangle_black.png'])
 
-def markimg(imgname, savename=None, smallname=None):
-  #Load fiducial marker, background star, and black rectangle images.
-  #The black rectangle is of the same resolution as bg_img.
+def markimg(imgname, savename=None, smallname=None, doerosion=True):
+  #Load the fiducial marker
+  #This image is a circular markers on a rectangular transparent background.
   fg_img = cv2.imread(fiducial_80x80, cv2.IMREAD_UNCHANGED)
+  #Get the dimensions of the fiducial marker image.
+  fg_height, fg_width = fg_img.shape[:2]
+  #Handle the alpha channel of the fiducial marker image
+  # needed for the transparency.
+  alpha_s = fg_img[:, :, 3] / 255.0
+  alpha_l = 1.0 - alpha_s
+
+  #Load background star and black rectangle images.
+  #The black rectangle is of the same resolution as bg_img.
   bg_img = cv2.imread(imgname)
   height, width = bg_img.shape[:2]
   rectangle = cv2.imread(rectangle_black)
   if (height, width) != rectangle.shape[:2]:
     rectangle = cv2.resize(rectangle, (width, height))
 
-  #Enlarge bg_img to prevent erosion stage from removing too many stars.
-  enlarged_big = cv2.resize(bg_img, (width*2, height*2))
-
-  #Greyscales the enlarged background star image.
-  graybg = cv2.cvtColor(enlarged_big, cv2.COLOR_BGR2GRAY)
-
-  #Thresholds, erodes, and dilates the stars on this image.
-  thresh = cv2.threshold(graybg, 175, 255, cv2.THRESH_BINARY)[1]
-  mask1 = thresh.copy()
-  mask1 = cv2.erode(mask1, None, iterations=1)
-  mask2 = mask1.copy()
-  mask2 = cv2.dilate(mask2, None, iterations = 2)
-
-  #Resizes back to original resolution, and finds the dimensions.
-  mask2resized = cv2.resize(mask2, (width, height))
-
-  #Identifies 'contours' within the processed image.
-  cnts = cv2.findContours(mask2resized.copy(),
-                          cv2.RETR_EXTERNAL,
-                          cv2.CHAIN_APPROX_SIMPLE)
-  cnts = imutils.grab_contours(cnts)
-
-  #Finds the dimensions of the fiducial marker image.
-  #This image is a circular markers on a rectangular transparent background.
-  fgy, fgx = fg_img.shape[:2]
-
-  #Handles the alpha channel of the fiducial marker image
-  # needed for the transparency.
-  alpha_s = fg_img[:, :, 3] / 255.0
-  alpha_l = 1.0 - alpha_s
+  #Optionally erode image before identifying contours
+  if doerosion:
+    #Enlarge bg_img to prevent erosion stage from removing too many stars.
+    eroded_bg = cv2.resize(bg_img, (width*2, height*2))
+    #Greyscale the enlarged background star image.
+    eroded_bg = cv2.cvtColor(eroded_bg, cv2.COLOR_BGR2GRAY)
+    #Threshold, erode, and dilate the stars on this image.
+    eroded_bg = cv2.threshold(eroded_bg, 175, 255, cv2.THRESH_BINARY)[1]
+    eroded_bg = cv2.erode(eroded_bg, None, iterations=1)
+    eroded_bg = cv2.dilate(eroded_bg, None, iterations = 2)
+    #Resize back to original resolution.
+    eroded_bg = cv2.resize(eroded_bg, (width, height))
+    contours = cv2.findContours(eroded_bg,
+                                cv2.RETR_EXTERNAL,
+                                cv2.CHAIN_APPROX_SIMPLE)
+  else:
+    #Identify 'contours' within the processed image.
+    contours = cv2.findContours(bg_img,
+                                cv2.RETR_EXTERNAL,
+                                cv2.CHAIN_APPROX_SIMPLE)
+  contours = imutils.grab_contours(contours)
 
   rectangle_build = rectangle.copy()
 
   #For each identified contour (bright star)
   # applies a fiducial marker to that location.
   #Adds the fiducial markers to the black rectangle.
-  for c in cnts:
+  for c in contours:
     x,y,w,h = cv2.boundingRect(c)
-    y1 = int((y + 0.5 * h) - 0.5 * fgy)
-    y2 = y1 + fgy
+    y1 = int((y + 0.5 * h) - 0.5 * fg_height)
+    y2 = y1 + fg_height
 
-    x1 = int((x + 0.5 * w) - 0.5 * fgx)
-    x2 = x1 + fgx
+    x1 = int((x + 0.5 * w) - 0.5 * fg_width)
+    x2 = x1 + fg_width
 
     rectangle_temp = rectangle.copy()
 

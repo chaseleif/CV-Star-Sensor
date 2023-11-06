@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import os, zipfile
+import os, sys, zipfile
 
 def get_negs(negatives=['neg_southern2']):
   print('Negatives:', ', '.join(negatives))
@@ -22,8 +22,17 @@ def get_negs(negatives=['neg_southern2']):
         inzip.extractall(negative)
     # Add all names within the folder
     files += [os.path.sep.join([negative,name]) \
-              for name in os.listdir(negative)]
+              for name in os.listdir(negative) \
+              if name.endswith('.jpg')]
   # Create bg.txt with names of all negatives
   with open(os.path.sep.join(thisdir+['bg.txt']),'w') as outfile:
     outfile.write('\n'.join(files))
 
+if __name__ == '__main__':
+  if len(sys.argv) != 2:
+    print('This script will decompress (as needed) negative image sets')
+    print('A file, bg.txt, will be created which lists negative files')
+    print('Usage:')
+    print(f'python3 {sys.argv[0]} negative1,negative2')
+    sys.exit(1)
+  get_negs(sys.argv[1].split(','))
