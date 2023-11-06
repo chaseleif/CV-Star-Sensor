@@ -55,7 +55,7 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
       box = [(label,x0,y0,x1,y1)]
       print('DETECTS\n')
     else:
-      print('POOR DETECTION {round(weighted,2)}\n')
+      print(f'POOR DETECTION {round(weighted,2)}\n')
   else:
     print('NO DETECTION\n')
   return box
