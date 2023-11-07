@@ -34,15 +34,14 @@ def combine_boxes(img, boxes):
           if any(box in overlap for box in overlaps[j]):
             overlap += overlaps[j]
     # Remove potential duplicates
-    conflicts = list(set(overlap))
-    del overlap
+    overlap = list(set(overlap))
     # Add these to our done list
-    combined += conflicts
+    combined += overlap
     # Origin of painted lines is the lowest y of the lowest x
-    x = boxes[conflicts[0]][1]
+    x = boxes[overlap[0]][1]
     # Create a combined label for box 0
     label = ''
-    for conflict in conflicts:
+    for conflict in overlap:
       label += boxes[conflict][0] + '\n'
       # Get the minimum x point
       x = min(x, boxes[conflict][1])
@@ -62,7 +61,7 @@ def combine_boxes(img, boxes):
       # Prefer directions in order: Down>Right>Up>Left
       # We will not overlap
       # Go down, x must equal x0 and y must be between y0 and y1
-      for lhs in conflicts:
+      for lhs in overlap:
         # x must equal x0
         if x != boxes[lhs][1]:
           continue
@@ -72,7 +71,7 @@ def combine_boxes(img, boxes):
         # We could go down as far as to y1
         endy = boxes[lhs][4]
         # We need to ensure no other box crosses this possible line:
-        for rhs in conflicts:
+        for rhs in overlap:
           if lhs == rhs:
             continue
           # Only if the x is between their x0 and x1
@@ -87,7 +86,7 @@ def combine_boxes(img, boxes):
           y = endy
           break
       # Go right, y must equal y1 and x must be between x0 and x1
-      for lhs in conflicts:
+      for lhs in overlap:
         # y must be y1
         if y != boxes[lhs][4]:
           continue
@@ -97,7 +96,7 @@ def combine_boxes(img, boxes):
         # We could go right as far as to x1
         endx = boxes[lhs][3]
         # We need to ensure no other box crosses this possible line:
-        for rhs in conflicts:
+        for rhs in overlap:
           if lhs == rhs:
             continue
           # Only if the y is between their y0 and y1
@@ -112,7 +111,7 @@ def combine_boxes(img, boxes):
           x = endx
           break
       # Go up, x must equal x1 and y must be between y0 and y1
-      for lhs in conflicts:
+      for lhs in overlap:
         # x must be x1
         if x != boxes[lhs][3]:
           continue
@@ -122,7 +121,7 @@ def combine_boxes(img, boxes):
         # We could go up as far as to y0
         endy = boxes[lhs][2]
         # We need to ensure no other box crosses this possible line:
-        for rhs in conflicts:
+        for rhs in overlap:
           if lhs == rhs:
             continue
           # Only if the x is between their x0 and x1
@@ -137,7 +136,7 @@ def combine_boxes(img, boxes):
           y = endy
           break
       # Go left, y must equal y0 and x must be between x0 and x1
-      for lhs in conflicts:
+      for lhs in overlap:
         # y must be y0
         if y != boxes[lhs][2]:
           continue
@@ -147,7 +146,7 @@ def combine_boxes(img, boxes):
         # We could go left as far as to x0
         endx = boxes[lhs][1]
         # We need to ensure no other box crosses this possible line:
-        for rhs in conflicts:
+        for rhs in overlap:
           if lhs == rhs:
             continue
           # Only if the y is between their y0 and y1
@@ -164,11 +163,11 @@ def combine_boxes(img, boxes):
     # The shape is painted
     # Make boxes none and get coordinates for the grouped label
     # Get the bottom-left most x and y
-    for conflict in conflicts:
+    for conflict in overlap:
       x = min(x, boxes[conflict][1])
       y = max(y, boxes[conflict][2])
     # Move x,y up/right as needed
-    for conflict in conflicts:
+    for conflict in overlap:
       # This box starts at or below y
       if y < boxes[conflict][2]:
         boxes[conflict] = None
@@ -180,6 +179,6 @@ def combine_boxes(img, boxes):
       # Clear this conflict box
       boxes[conflict] = None
     # Give the first conflict box the label and position
-    boxes[conflicts[0]] = (label[:-1], x, y)
+    boxes[overlap[0]] = (label[:-1], x, y)
   return boxes
 
