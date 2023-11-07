@@ -166,6 +166,6 @@ def combine_boxes(img, boxes):
       endx = max(endx, boxes[conflict][3])
       y = min(y, boxes[conflict][2])
       boxes[conflict] = None
-    boxes[0] = (label[:-1], x, y)
+    boxes[conflicts[0]] = (label[:-1], x, y)
   return boxes
 
