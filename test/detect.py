@@ -82,14 +82,14 @@ def runtest(imgname):
       for j, line in enumerate(box[0].split('\n')):
         cv2.putText(img,
                     line,
-                    (box[1], box[2] + 44 - 28*(j+2)),
+                    (box[1], box[2] - 16 - 24*j),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.9, (0,0,255), 2,
                     cv2.LINE_AA)
     else:
       cv2.putText(img,
                   box[0],
-                  (box[1], box[2] - 16*(box[0].count('\n')+1)),
+                  (box[1], box[2] - 16),
                   cv2.FONT_HERSHEY_SIMPLEX,
                   0.9, (0,0,255), 2,
                   cv2.LINE_AA)

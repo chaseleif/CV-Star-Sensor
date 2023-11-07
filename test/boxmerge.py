@@ -12,10 +12,10 @@ def combine_boxes(img, boxes):
       # and
       # if i's y0 is within the range of j's (y0,y1)
       # or i's y1 is within the range of j's (y0,y1)
-      if ((boxes[j][1] < boxes[i][1] and boxes[i][1] < boxes[j][3]) or \
-          (boxes[j][1] < boxes[i][3] and boxes[i][3] < boxes[j][3]))  and \
-          ((boxes[j][2] < boxes[i][2] and boxes[i][2] < boxes[j][4]) or \
-          (boxes[j][2] < boxes[i][4] and boxes[i][4] < boxes[j][4])):
+      if ((boxes[j][1] <= boxes[i][1] and boxes[i][1] <= boxes[j][3]) or \
+          (boxes[j][1] <= boxes[i][3] and boxes[i][3] <= boxes[j][3]))  and \
+          ((boxes[j][2] <= boxes[i][2] and boxes[i][2] <= boxes[j][4]) or \
+          (boxes[j][2] <= boxes[i][4] and boxes[i][4] <= boxes[j][4])):
         overlaps.append((i,j))
   combined = []
   # Our line painting method
@@ -26,15 +26,19 @@ def combine_boxes(img, boxes):
       continue
     # The minimum conflict is this pair of boxes
     conflicts = [overlaps[i][0], overlaps[i][1]]
-    # For any later overlaps that are in the same group
-    for j in range(i+1,len(overlaps)):
-      # If neither point is in the current conflicts we are done
-      if overlaps[j][0] not in conflicts and overlaps[j][1] not in conflicts:
+    # For any overlaps that belong in the same group
+    while True:
+      # Track whether we have added a new member to the group
+      x = len(conflicts)
+      for j in range(i+1,len(overlaps)):
+        # Add these points to our conflicts
+        if overlaps[j][0] in conflicts or overlaps[j][1] in conflicts:
+          conflicts += [overlaps[j][0],overlaps[j][1]]
+      # Remove duplicates
+      conflicts = list(set(conflicts))
+      # No more blocks added to the group
+      if x == len(conflicts):
         break
-      # Add these points to our conflicts
-      conflicts += [overlaps[j][0],overlaps[j][1]]
-    # Remove duplicates
-    conflicts = list(set(conflicts))
     # Add these to our done list
     combined += conflicts
     # Origin of painted lines is the lowest y of the lowest x
@@ -160,12 +164,25 @@ def combine_boxes(img, boxes):
           paint((x,y), (endx, endy))
           x = endx
           break
-    # The shape is painted, change box 0's coordinates for the label
+    # The shape is painted
+    # Make boxes none and get coordinates for the grouped label
+    # Get the bottom-left most x and y
     for conflict in conflicts:
       x = min(x, boxes[conflict][1])
-      endx = max(endx, boxes[conflict][3])
-      y = min(y, boxes[conflict][2])
+      y = max(y, boxes[conflict][2])
+    # Move x,y up/right as needed
+    for conflict in conflicts:
+      # This box starts at or below y
+      if y < boxes[conflict][2]:
+        boxes[conflict] = None
+        continue
+      # We don't have 680px space right, start from this x,y
+      if boxes[conflict][1] - x < 680:
+        x = boxes[conflict][1]
+        y = boxes[conflict][2]
+      # Clear this conflict box
       boxes[conflict] = None
+    # Give the first conflict box the label and position
     boxes[conflicts[0]] = (label[:-1], x, y)
   return boxes
 
