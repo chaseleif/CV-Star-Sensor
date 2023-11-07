@@ -66,7 +66,7 @@ def combine_boxes(img, boxes):
         if x != boxes[lhs][1]:
           continue
         # y must be between y0 and y1
-        if y < boxes[lhs][2] or y > boxes[lhs][4]:
+        if y < boxes[lhs][2] or y >= boxes[lhs][4]:
           continue
         # We could go down as far as to y1
         endy = boxes[lhs][4]
@@ -91,7 +91,7 @@ def combine_boxes(img, boxes):
         if y != boxes[lhs][4]:
           continue
         # x must be between x0 and x1
-        if x < boxes[lhs][1] or x > boxes[lhs][3]:
+        if x < boxes[lhs][1] or x >= boxes[lhs][3]:
           continue
         # We could go right as far as to x1
         endx = boxes[lhs][3]
@@ -116,7 +116,7 @@ def combine_boxes(img, boxes):
         if x != boxes[lhs][3]:
           continue
         # y must be between y0 and y1
-        if y < boxes[lhs][2] or y > boxes[lhs][4]:
+        if y <= boxes[lhs][2] or y > boxes[lhs][4]:
           continue
         # We could go up as far as to y0
         endy = boxes[lhs][2]
@@ -141,7 +141,7 @@ def combine_boxes(img, boxes):
         if y != boxes[lhs][2]:
           continue
         # x must be between x0 and x1
-        if x < boxes[lhs][1] or x > boxes[lhs][3]:
+        if x <= boxes[lhs][1] or x > boxes[lhs][3]:
           continue
         # We could go left as far as to x0
         endx = boxes[lhs][1]
