@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import cv2, os
+from cv_star_sensor.test.boxmerge import combine_boxes
 
 thisdir = os.path.realpath(__file__).split(os.path.sep)[:-1]
 cascades = ['cascades']
@@ -72,15 +73,27 @@ def runtest(imgname):
       boxes += stardetection(*parts,
                               os.path.sep.join([directory,xmlname]),
                               img)
-  for box in boxes:
-    #box = (label,x0,y0,x1,y1)
-    cv2.putText(img,
-                box[0],
-                (box[1],box[2]-16),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.9, (0,0,255), 2,
-                cv2.LINE_AA)
-    cv2.rectangle(img, (box[1],box[2]), (box[3],box[4]), (0,255,0), 2)
+  boxes = combine_boxes(img, boxes)
+  #boxes[i] = (label,x0,y0,x1,y1)
+  for i, box in enumerate(boxes):
+    if not box:
+      continue
+    if len(box) == 3:
+      for j, line in enumerate(box[0].split('\n')):
+        cv2.putText(img,
+                    line,
+                    (box[1], box[2] + 44 - 28*(j+2)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.9, (0,0,255), 2,
+                    cv2.LINE_AA)
+    else:
+      cv2.putText(img,
+                  box[0],
+                  (box[1], box[2] - 16*(box[0].count('\n')+1)),
+                  cv2.FONT_HERSHEY_SIMPLEX,
+                  0.9, (0,0,255), 2,
+                  cv2.LINE_AA)
+      cv2.rectangle(img, (box[1],box[2]), (box[3],box[4]), (0,255,0), 2)
   shrunk_img = cv2.resize(img, (1344, 756))
   cv2.imshow("Star Pattern Detections", shrunk_img)
   cv2.waitKey(0)
