@@ -36,22 +36,24 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
   box = []
   #The purpose of this if statement is to see if any detection has been made.
   if len(stars) > 0:
-    #highweight = 0
     maxsize = 0
     for i, (x,y,w,h) in enumerate(stars):
+      testweight = levelWeights[i]*sf
+      if testweight <= 4 or testweight >= 6:
+        if maxsize == 0:
+          weighted = testweight
+        continue
       #This if statement will find the detection with the largest bounding box.
-      #if levelWeights[i] > highweight:
-      #  highweight = levelWeights[i]
       if w*h > maxsize:
         maxsize = w*h
-        weighted = levelWeights[i]*sf
+        weighted = testweight
         x0 = x
         y0 = y
         x1 = x+w
         y1 = y+h
 
     #Sets the levelWeights value bounds for a 'successful' detection.
-    if weighted > 4 and weighted < 6:
+    if maxsize > 0:
       label = f'{cascade}, {round(weighted,2)}: {(x0+x1)//2}, {(y0+y1)//2}'
       box = [(label,x0,y0,x1,y1)]
       print('DETECTS\n')
