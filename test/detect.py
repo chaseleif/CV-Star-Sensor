@@ -4,8 +4,6 @@ import cv2, os
 from cv_star_sensor.test.boxmerge import combine_boxes
 
 thisdir = os.path.realpath(__file__).split(os.path.sep)[:-1]
-cascades = ['cascades']
-cascades = [os.path.sep.join(thisdir+[cascade]) for cascade in cascades]
 
 #Load an input test image (which has had fiducial markers applied).
 #In practice images would be received from the RPi camera and markers applied.
@@ -63,7 +61,8 @@ def stardetection(cascade, ra, dec, minn, sf, xmlname, img):
     print('NO DETECTION\n')
   return box
 
-def runtest(imgname):
+def runtest(imgname, cascades=['cascades'], mergeboxes=True, getboxes=False):
+  cascades = [os.path.sep.join(thisdir+[cascade]) for cascade in cascades]
   img = cv2.imread(imgname) if type(imgname) is str else imgname
   boxes = []
   #Run the detection function for each cascade file
@@ -75,7 +74,10 @@ def runtest(imgname):
       boxes += stardetection(*parts,
                               os.path.sep.join([directory,xmlname]),
                               img)
-  boxes = combine_boxes(img, boxes)
+  if getboxes:
+    return boxes
+  if mergeboxes:
+    boxes = combine_boxes(img, boxes)
   #boxes[i] = (label,x0,y0,x1,y1)
   for i, box in enumerate(boxes):
     if not box:
@@ -100,4 +102,5 @@ def runtest(imgname):
   cv2.imshow("Star Pattern Detections", shrunk_img)
   cv2.waitKey(0)
   cv2.destroyAllWindows()
+  return boxes
 

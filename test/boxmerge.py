@@ -5,8 +5,12 @@ import cv2
 def combine_boxes(img, boxes):
   #boxes[i] = (label,x0,y0,x1,y1)
   overlaps = [ [i] for i in range(len(boxes)) ]
+  # Each overlaps[i] is a list of all overlapping boxes
   for i in range(len(boxes)):
-    for j in range(i+1,len(boxes)):
+    # Collect every box that overlaps with i and put it in i
+    for j in range(len(boxes)):
+      if i == j:
+        continue
       # if i's x0 is within the range of j's (x0,x1)
       # or i's x1 is within the range of j's (x0,x1)
       # and
@@ -18,23 +22,66 @@ def combine_boxes(img, boxes):
           (boxes[j][2] <= boxes[i][4] and boxes[i][4] <= boxes[j][4])):
         overlaps[i].append(j)
         overlaps[j].append(i)
-  combined = []
+  # Merge indirect overlaps
+  for _ in range(2):
+    for i in range(len(boxes)):
+      indirect = set()
+      for overlap in overlaps[i]:
+        indirect.update(overlaps[overlap])
+      # Remove duplicates, ensure index 0 is the box index
+      overlaps[i] = list(indirect)
+      overlaps[i].remove(i)
+      overlaps[i].insert(0,i)
+  # Lambda functions for grouped box painting
+  # Check whether we can start painting along a box's edge
+  on_edge = {'down': lambda x,y,box: x == box[1] and \
+                              y >= box[2] and y < box[4],
+            'right': lambda x,y,box: y == box[4] and \
+                              x >= box[1] and x < box[3],
+            'up':    lambda x,y,box: x == box[3] and \
+                              y > box[2] and y <= box[4],
+            'left':  lambda x,y,box: y == box[2] and \
+                              x > box[1] and x <= box[3]}
+  # The maximum point we could move to in a direction
+  max_end = {'down': lambda x,y,box: (x, box[4]),
+            'right': lambda x,y,box: (box[3], y),
+            'up':    lambda x,y,box: (x, box[2]),
+            'left':  lambda x,y,box: (box[1], y)}
+  # Check whether a box could cross a line
+  box_clear = {'down': lambda x,y,box: x < box[1] or x > box[3],
+              'right': lambda x,y,box: y < box[2] or y > box[4],
+              'up':    lambda x,y,box: x < box[1] or x > box[3],
+              'left':  lambda x,y,box: y < box[2] or y > box[4]}
+  # Return endx,endy ensuring there won't be a collision
+  no_collide = {'down':  lambda x,y,endx,endy,box: (x,
+                                                    box[2] if \
+                                                y < box[2] and endy > box[2] \
+                                                else endy),
+                'right': lambda x,y,endx,endy,box: (box[1] if \
+                                                x < box[1] and endx > box[1] \
+                                                else endx, y),
+                'up':    lambda x,y,endx,endy,box: (x,
+                                                    box[4] if \
+                                                y > box[4] and endy < box[4] \
+                                                else endy),
+                'left':  lambda x,y,endx,endy,box: (box[3] if \
+                                                x > box[3] and endx < box[3] \
+                                                else endx, y)}
+  # Whether we have a line to paint
+  have_line = {'down': lambda x,y,endx,endy: y < endy,
+              'right': lambda x,y,endx,endy: x < endx,
+              'up':    lambda x,y,endx,endy: endy < y,
+              'left':  lambda x,y,endx,endy: endx < x}
   # Our line painting method
   paint = lambda start, end: cv2.line(img, start, end, (0,255,0), 2)
+  # Track boxes that are already grouped
+  combined = []
+  # Process overlap groups in reverse, guarantees groups are inclusive
   while len(overlaps) > 0:
     overlap = overlaps.pop()
-    # Skip if we've already done this overlap, or there is no overlap
+    # Skip if we've already done this overlap or there is no overlap
     if overlap[0] in combined or len(overlap) == 1:
       continue
-    # Find any other connected overlaps
-    for i in range(len(overlaps)):
-      if any(box in overlap for box in overlaps[i]):
-        overlap += overlaps[i]
-        for j in range(i-1,-1,-1):
-          if any(box in overlap for box in overlaps[j]):
-            overlap += overlaps[j]
-    # Remove potential duplicates
-    overlap = list(set(overlap))
     # Add these to our done list
     combined += overlap
     # Origin of painted lines is the lowest y of the lowest x
@@ -53,130 +100,48 @@ def combine_boxes(img, boxes):
     stopx, stopy = x, y
     # Draw our first line . . . downward (considering top left as 0,0)
     # We are guaranteed to be able to go straight down
+    direction = 'down'
     paint((x,y), (endx,endy))
     # Advance x and y
-    x, y = endx, endy
+    x,y = endx,endy
     # Paint the shape
     while (x, y) != (stopx, stopy):
-      # Prefer directions in order: Down>Right>Up>Left
-      # We will not overlap
-      # Go down, x must equal x0 and y must be between y0 and y1
+      direction = 'right' if direction == 'down' else \
+                    'up' if direction == 'right' else \
+                    'left' if direction == 'up' else \
+                    'down'
       for lhs in overlap:
-        # x must equal x0
-        if x != boxes[lhs][1]:
+        # If we aren't on the boxes edge
+        if not on_edge[direction](x,y,boxes[lhs]):
           continue
-        # y must be between y0 and y1
-        if y < boxes[lhs][2] or y >= boxes[lhs][4]:
-          continue
-        # We could go down as far as to y1
-        endy = boxes[lhs][4]
+        endx, endy = max_end[direction](x,y,boxes[lhs])
         # We need to ensure no other box crosses this possible line:
         for rhs in overlap:
-          if lhs == rhs:
+          if lhs == rhs or box_clear[direction](x,y,boxes[rhs]):
             continue
-          # Only if the x is between their x0 and x1
-          if x < boxes[rhs][1] or x > boxes[rhs][3]:
-            continue
-          # We would cross the other box, stop at their y
-          if y < boxes[rhs][2] and endy > boxes[rhs][2]:
-            endy = boxes[rhs][2]
-        # Paint downward
-        if y < endy:
-          paint((x,y), (x,endy))
-          y = endy
-          break
-      # Go right, y must equal y1 and x must be between x0 and x1
-      for lhs in overlap:
-        # y must be y1
-        if y != boxes[lhs][4]:
-          continue
-        # x must be between x0 and x1
-        if x < boxes[lhs][1] or x >= boxes[lhs][3]:
-          continue
-        # We could go right as far as to x1
-        endx = boxes[lhs][3]
-        # We need to ensure no other box crosses this possible line:
-        for rhs in overlap:
-          if lhs == rhs:
-            continue
-          # Only if the y is between their y0 and y1
-          if y < boxes[rhs][2] or y > boxes[rhs][4]:
-            continue
-          # We would cross the other box, stop at their x
-          if x < boxes[rhs][1] and endx > boxes[rhs][1]:
-            endx = boxes[rhs][1]
-        # Paint rightward
-        if x < endx:
-          paint((x,y), (endx,y))
-          x = endx
-          break
-      # Go up, x must equal x1 and y must be between y0 and y1
-      for lhs in overlap:
-        # x must be x1
-        if x != boxes[lhs][3]:
-          continue
-        # y must be between y0 and y1
-        if y <= boxes[lhs][2] or y > boxes[lhs][4]:
-          continue
-        # We could go up as far as to y0
-        endy = boxes[lhs][2]
-        # We need to ensure no other box crosses this possible line:
-        for rhs in overlap:
-          if lhs == rhs:
-            continue
-          # Only if the x is between their x0 and x1
-          if x < boxes[rhs][1] or x > boxes[rhs][3]:
-            continue
-          # We would cross the other box, stop at their y
-          if y > boxes[rhs][4] and endy < boxes[rhs][4]:
-            endy = boxes[rhs][4]
-        # Paint upward
-        if endy < y:
-          paint((x,y), (x,endy))
-          y = endy
-          break
-      # Go left, y must equal y0 and x must be between x0 and x1
-      for lhs in overlap:
-        # y must be y0
-        if y != boxes[lhs][2]:
-          continue
-        # x must be between x0 and x1
-        if x <= boxes[lhs][1] or x > boxes[lhs][3]:
-          continue
-        # We could go left as far as to x0
-        endx = boxes[lhs][1]
-        # We need to ensure no other box crosses this possible line:
-        for rhs in overlap:
-          if lhs == rhs:
-            continue
-          # Only if the y is between their y0 and y1
-          if y < boxes[rhs][2] or y > boxes[rhs][4]:
-            continue
-          # We would cross the other box, stop at their x
-          if x > boxes[rhs][3] and endx < boxes[rhs][3]:
-            endx = boxes[rhs][3]
-        # Paint leftward
-        if endx < x:
-          paint((x,y), (endx, endy))
-          x = endx
+          endx, endy = no_collide[direction](x,y,endx,endy,boxes[rhs])
+        if have_line[direction](x,y,endx,endy):
+          paint((x,y), (endx,endy))
+          x,y = endx,endy
           break
     # The shape is painted
     # Make boxes none and get coordinates for the grouped label
-    # Get the bottom-left most x and y
+    # Get the top-left most x and y
     for conflict in overlap:
       x = min(x, boxes[conflict][1])
-      y = max(y, boxes[conflict][2])
-    # Move x,y up/right as needed
+      if x == boxes[conflict][1]:
+        y = min(y, boxes[conflict][2])
+    endx = x + 280
+    # Move x,y right/up as needed
     for conflict in overlap:
-      # This box starts at or below y
-      if y < boxes[conflict][2]:
-        boxes[conflict] = None
+      # Within the x and y
+      if endx <= boxes[conflict][1] or x > boxes[conflict][3]:
         continue
-      # We don't have 680px space right, start from this x,y
-      if boxes[conflict][1] - x < 680:
-        x = boxes[conflict][1]
-        y = boxes[conflict][2]
-      # Clear this conflict box
+      if y <= boxes[conflict][2]:
+        continue
+      x,y = boxes[conflict][1],boxes[conflict][2]
+      endx = x + 280
+    for conflict in overlap:
       boxes[conflict] = None
     # Give the first conflict box the label and position
     boxes[overlap[0]] = (label[:-1], x, y)
