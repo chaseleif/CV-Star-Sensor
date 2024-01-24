@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import cv2, imutils, os
+import cv2, imutils, os, sys
 
 thisdir = os.path.realpath(__file__).split(os.path.sep)[:-1]
 thisdir = os.path.sep.join(thisdir)
@@ -107,3 +107,23 @@ def markimg(imgname, savename=None, smallname=None, doerosion=True):
 
   # Return the marked image
   return bg_img
+
+def print_usage():
+  print('This script will mark an image with the fiducial markers')
+  print('Usage:')
+  print(f'python3 {sys.argv[0]} input.png output.png')
+  print('The output image name is optional')
+  print('If no output filename given output will be input_marked.png')
+
+if __name__ == '__main__':
+  if len(sys.argv) != 2 and len(sys.argv) != 3:
+    print_usage()
+    sys.exit(0)
+  if not os.path.isfile(sys.argv[1]):
+    print_usage()
+    print(f'# {sys.argv[1]} is not a valid filename')
+    sys.exit(1)
+  outname = '.'.join(sys.argv[1].split('.')[:-1]) + '_marked.png' if \
+            len(sys.argv) == 2 else sys.argv[2]
+  markimg(sys.argv[1], savename=outname)
+
