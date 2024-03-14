@@ -119,6 +119,13 @@ if __name__ == '__main__':
   if len(sys.argv) != 2 and len(sys.argv) != 3:
     print_usage()
     sys.exit(0)
+  if os.path.isdir(sys.argv[1]):
+    dirname = sys.argv[1]
+    for name in os.listdir(dirname):
+      if not name.endswith('.png'): continue
+      name = os.path.join(dirname,name)
+      outname = '.'.join(name.split('.')[:-1]) + '_marked.png'
+      markimg(name, savename=outname)
   if not os.path.isfile(sys.argv[1]):
     print_usage()
     print(f'# {sys.argv[1]} is not a valid filename')
