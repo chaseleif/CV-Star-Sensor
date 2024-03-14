@@ -126,6 +126,7 @@ if __name__ == '__main__':
       name = os.path.join(dirname,name)
       outname = '.'.join(name.split('.')[:-1]) + '_marked.png'
       markimg(name, savename=outname)
+    sys.exit(0)
   if not os.path.isfile(sys.argv[1]):
     print_usage()
     print(f'# {sys.argv[1]} is not a valid filename')
